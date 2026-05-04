@@ -9,8 +9,6 @@ FirewallMgr是一个轻量级的 Windows 防火墙管理工具，允许您通过
 - **按 IP 阻断**：禁止程序访问特定 IPv4/IPv6 地址
 - **按域名阻断**：禁止程序解析并访问特定域名
 - **全局阻断**：禁止程序的所有出站网络访问
-- **规则标签化管理**：所有规则以 `NC_FirewallMgr_` 为前缀，便于识别和批量清理
-- **配置文件驱动**：支持 UTF-8 / UTF-16 编码的 INI 风格配置文件
 - **规则生命周期管理**：支持添加、删除、清空、列出本工具创建的所有规则
 - **自动清理残留规则**：初始化时自动删除之前可能残留的规则
 
@@ -49,7 +47,7 @@ FirewallMgr.exe [选项]
 "程序完整路径" 目标
 ```
 
-- **程序路径**：需要用双引号括起来，支持绝对路径或通过 WinUtils::ResolvePath 能解析的路径（如 `%ProgramFiles%\App\app.exe`）
+- **程序路径**：需要用双引号括起来
 - **目标**：可以是以下三种之一
   - `ALL`（不区分大小写）：完全禁止该程序的所有出站流量
   - IP 地址：例如 `8.8.8.8`，`2400:da00::6666`，也支持子网掩码（如 `192.168.1.0/24`）
@@ -58,17 +56,10 @@ FirewallMgr.exe [选项]
 #### 配置文件示例（config.ini）
 
 ```ini
-; 注释行以分号或井号开头
 "c:\Program Files\SomeApp\app.exe" 8.8.8.8
-"%ProgramFiles%\BadApp\bad.exe" ALL
 "E:\tools\updater.exe" update.check.com
-"C:\Users\Public\game.exe" 203.0.113.5
+"C:\Users\Public\game.exe" 1.1.1.1
 ```
-
-> **注意**：
-> - 文件编码支持 UTF-8（含 BOM）和 UTF-16 LE（含 BOM），推荐使用 UTF-8 with BOM。
-> - 空行和注释行会被自动忽略。
-> - 目标中的域名会自动识别为 DOMAIN 类型，IP 地址识别为 IP 类型，`ALL` 为全局阻断。
 
 ### 规则命名规则
 
@@ -112,12 +103,12 @@ FirewallMgr.exe -list
 匹配前缀: NC_FirewallMgr_
 ========================================
 
-[1] NC_FirewallMgr_3F8D2A1E_BlockIP_203.0.113.5
+[1] NC_FirewallMgr_3F8D2A1E_BlockIP_1.1.1.1
   程序: C:\Users\Public\game.exe
   类型: IP
   方向: 出站
   状态: 已启用
-  远程IP: 203.0.113.5
+  远程IP: 1.1.1.1
 
 共找到 1 条规则
 ```
@@ -138,7 +129,7 @@ FirewallMgr.exe -delete my_rules.ini
 FirewallMgr.exe -clear
 ```
 
-### 6. 直接从默认配置 config.ini 执行
+### 6. 直接从默认配置 config.txt 执行
 
 ```cmd
 FirewallMgr.exe -config
@@ -150,35 +141,18 @@ FirewallMgr.exe -config
 2. **防火墙服务必须运行**：确保 Windows Firewall 服务（MpsSvc）处于运行状态。
 3. **域名阻断依赖 DNS 解析**：阻断域名时，防火墙规则会阻止对解析后 IP 的访问，若应用程序使用 DoH 或其他加密 DNS，可能需要额外配置。
 4. **规则冲突**：如果存在允许规则优先级更高，阻断规则可能不生效。请检查 Windows 防火墙的规则排序。
-5. **通配符域名**：底层防火墙支持一级通配符（如 `*.example.com`），但不保证支持多级通配符，请以实际效果为准。
-6. **路径中的环境变量**：支持 `%ProgramFiles%`、`%AppData%` 等系统环境变量，由 `WinUtils::ResolvePath` 负责展开。
-
-## 常见问题
-
-**Q: 为什么添加规则后程序依然可以访问网络？**  
-A: 请检查：
-- 是否以管理员身份运行 FirewallMgr？
-- 规则是否已启用（`-list` 查看状态）？
-- 是否已关闭其他防火墙软件或 VPN 的冲突规则？
-- 程序是否通过系统代理或其它不经过 Windows 过滤层的通道访问网络？
-
-**Q: 如何删除单个规则？**  
-A: 使用 `-delete` 参数指定包含该规则的配置文件；或者通过 Windows 防火墙高级安全控制台手动删除以 `NC_FirewallMgr_` 开头的规则。
-
-**Q: 能否阻断入站连接？**  
-A: 当前版本仅支持出站阻断。您可以通过修改配置文件的目标格式或扩展源代码来添加入站支持。
-
-**Q: 配置文件支持通配符路径吗？**  
-A: 不支持。程序路径必须是精确的可执行文件路径，可以使用环境变量辅助。
+5. **通配符域名**：底层防火墙支持一级通配符（如 `*.example.com`）
 
 ## 许可证
 
-本项目采用 [MIT 许可证](LICENSE)。您可以自由使用、修改和分发，但需保留原始版权声明。
+本项目采用 [MIT 许可证](../licenses/LICENSE-FirewallMgr)。您可以自由使用、修改和分发，但需保留原始版权声明。
 
-## 贡献与反馈
+WinUtils:  [MIT 许可证](../licenses/LICENSE-WinUtils)
 
-欢迎提交 Issue 或 Pull Request。若有关于 TaggedFirewallController 底层实现的问题，请参考 WinUtils 库的文档。
+hash-library: [zlib 许可证](../licenses/LICENSE-hash-library)
 
----
+cpp-httplib: [MIT 许可证](../licenses/LICENSE-cpp-httplib)
 
-**FirewallMgr– 掌控你的应用程序网络权限**
+mINI: [MIT 许可证](../licenses/LICENSE-mINI)
+
+WinReg: [MIT 许可证](../licenses/LICENSE-WinReg)
