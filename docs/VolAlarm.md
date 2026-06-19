@@ -6,4 +6,4 @@
 
 sounddevice: [MIT 许可证](../licenses/LICENSE-sounddevice)
 
-numpy: [许可证](../licenses/LICENSE-numpy.txt)
+numpy: [许可证](../licenses/LICENSE-numpy)
